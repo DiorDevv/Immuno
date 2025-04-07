@@ -275,6 +275,7 @@ class BemorHolatiStatistika(APIView):
         })
 
 
+
 class BemorPDFDownloadView(APIView):
     permission_classes = [AllowAny]
 
