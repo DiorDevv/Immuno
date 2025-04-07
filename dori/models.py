@@ -21,6 +21,7 @@ class MedicationType(BaseModel):
         return self.name
 
 
+
 from django.db import models
 from django.db.models import Sum
 
