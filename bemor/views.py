@@ -191,6 +191,7 @@ class BemorViewSet(viewsets.ModelViewSet):
             )
 
 
+
 class ExportBemorExcelView(View):
 
     def get(self, request, *args, **kwargs):
