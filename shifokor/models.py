@@ -1,6 +1,6 @@
 import datetime
 
-from django.db.models import Model, CharField, IntegerField, DateField, OneToOneField, CASCADE
+from django.db.models import Model, CharField, IntegerField, DateField, OneToOneField, CASCADE, ForeignKey
 
 from shared.models import BaseModel
 
@@ -33,7 +33,7 @@ class Shifokorlar(BaseModel):
     oxirgi_malaka_oshirgan_joyi = CharField(max_length=150)
     qayta_malaka_oshirish_vaqti = DateField(auto_now=True)
     arxivga_olingan_sana = DateField(null=True)
-
+    viloyat = ForeignKey('bemor.Viloyat', CASCADE, 'shifokorlar')
 
     def __str__(self):
         return f"{self.shifokor}"

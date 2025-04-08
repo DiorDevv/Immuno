@@ -12,6 +12,7 @@ import pandas as pd
 from django.http import HttpResponse
 from rest_framework.views import APIView
 
+
 class ShifokorModelViewSet(ModelViewSet):
     queryset = Shifokorlar.objects.all()
     serializer_class = ShifokorModelSerializer
