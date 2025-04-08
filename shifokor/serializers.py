@@ -39,7 +39,7 @@ class ShifokorModelSerializer(ModelSerializer):
     class Meta:
         model = Shifokorlar
         fields = ("shifokor","lavozimi","mutaxasislik_toifasi","telefon_raqami",
-                   "ish_staji", "oxirgi_malaka_oshirgan_joyi", 'biriktirilgan_muassasa')
+                   "ish_staji", "oxirgi_malaka_oshirgan_joyi", 'biriktirilgan_muassasa', 'viloyat')
 
 
 class ShaxsiyMalumotlarModelSerializer(ModelSerializer):
@@ -50,10 +50,11 @@ class ShaxsiyMalumotlarModelSerializer(ModelSerializer):
 
 class ShifokorListSerializer(ModelSerializer):
     shifokor = ShaxsiyMalumotlarModelSerializer()
+    viloyat = CharField(source='viloyat__name')
     class Meta:
         model = Shifokorlar
         fields = ('shifokor', 'lavozimi', 'mutaxasislik_toifasi',
-                  'telefon_raqami')
+                  'telefon_raqami', 'viloyat')
 
 
 class ShifokorDetailUpdateModelSerializer(ModelSerializer):
