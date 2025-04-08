@@ -79,13 +79,16 @@ class ManzilViewSet(viewsets.ModelViewSet):
 
 class ViloyatViewSet(viewsets.ModelViewSet):
     queryset = Viloyat.objects.all()
-    serializers = ViloyatSerializer
+    serializer_class = ViloyatSerializer  # TO‘G‘RI: serializer_class bo‘lishi kerak
     permission_classes = []
     pagination_class = CustomPagination
 
     def get_serializer_class(self):
-        if self.action == 'list':  # Agar foydalanuvchi GET so‘rovi yuborsa
+        if getattr(self, 'swagger_fake_view', False):  # Swagger uchun tekshiruv
+            return self.serializer_class
+        if self.action == 'list':
             return ViloyatSerializer
+        return super().get_serializer_class()
 
 
 class OperatsiyaBolganJoyViewSet(viewsets.ModelViewSet):
@@ -165,7 +168,6 @@ class BemorViewSet(viewsets.ModelViewSet):
                     qoshimcha_malumotlar=bemor.qoshimcha_malumotlar,
                 )
 
-
                 # ⚠️ Muhim: Arxivga yozilgach, bemorni o‘chirish
                 bemor.delete()
 
@@ -189,7 +191,6 @@ class BemorViewSet(viewsets.ModelViewSet):
                 {"error": f"Xatolik yuz berdi: {str(e)}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-
 
 
 class ExportBemorExcelView(View):
@@ -274,7 +275,6 @@ class BemorHolatiStatistika(APIView):
             "data": list(statistikalar),
             "jami_bemorlar": jami_bemorlar_soni  # Umumiy bemorlar soni qo‘shildi
         })
-
 
 
 class BemorPDFDownloadView(APIView):
