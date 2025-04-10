@@ -1,9 +1,13 @@
+import datetime
+
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.response import Response
 from shifokor.models import Shifokorlar, ShifokorQoshish
-from .serializers import ShifokorModelSerializer, ShifokorListSerializer, ShifokorDetailUpdateModelSerializer, \
-    ArxivShifokorModelSerializer
+from .serializers import ShifokorModelSerializer, ShifokorListSerializer, \
+    ArxivShifokorModelSerializer, ShifokorCreateDetailModelserializer, ShifokorDetailModelSerializer, \
+    ShifokorListAPISerializer
 from shifokor.serializers import ShifokorQoshishModelSerializer
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 from rest_framework.permissions import AllowAny
@@ -18,16 +22,40 @@ class ShifokorModelViewSet(ModelViewSet):
     serializer_class = ShifokorModelSerializer
     permission_classes = (AllowAny,)
 
+
     def list(self, request, *args, **kwargs):
-        self.serializer_class = ShifokorListSerializer
+        if request.user.role_user in ['TTB', 'BOSH_M']:
+            self.serializer_class = ShifokorListSerializer
+        else:
+            self.serializer_class = ShifokorListAPISerializer
+        self.filter_backends = [SearchFilter, OrderingFilter]
+        self.search_fields = ['shifokor__ism', 'shifokor__familiya', 'shifokor__JSHSHIR']
         return super().list(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
-        self.serializer_class = ShifokorDetailUpdateModelSerializer
+        self.serializer_class = ShifokorCreateDetailModelserializer
         return super().update(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        self.serializer_class = ShifokorCreateDetailModelserializer
+        super().create(request, *args, **kwargs)
+        obj = self.get_object()
+        obj.biriktirilgan_muassasa = request.user
+        obj.save()
+        return obj
+
     def retrieve(self, request, *args, **kwargs):
-        self.serializer_class = ShifokorDetailUpdateModelSerializer
+        self.serializer_class = ShifokorDetailModelSerializer
+        return super().retrieve(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        arxiv_sababi = kwargs.get('arxiv_sababi')
+        arxivga_olingan_sana = datetime.date.today()
+        obj = self.get_object()
+        obj.arxiv_sababi = arxiv_sababi
+        obj.arxivga_olingan_sana = arxivga_olingan_sana
+        obj.save()
         return super().retrieve(request, *args, **kwargs)
 
 
@@ -101,10 +129,3 @@ class ShifokorlarExcelDownloadAPIView(APIView):
             df.to_excel(writer, index=False, sheet_name="Shifokorlar")
 
         return response
-
-
-
-
-
-
-
