@@ -32,8 +32,6 @@ class Manzil(models.Model):
     mamlakat = models.CharField(max_length=255, default="O'zbekiston")
     viloyat = models.ForeignKey(Viloyat, on_delete=models.SET_NULL, null=True, blank=True)
     tuman = models.ForeignKey(Tuman, on_delete=models.SET_NULL, null=True, blank=True, related_name="manzil_tumanlari")
-    tuman_tibbiyot_birlashmasi = models.ForeignKey(Tuman, on_delete=models.SET_NULL, null=True, blank=True,
-                                                   related_name="manzil_tibbiyot_birlashmalari")
     mahalla = models.CharField(max_length=255)
     kocha_nomi = models.CharField(max_length=50)
 
@@ -112,6 +110,8 @@ class Bemor(BaseModel):
     operatsiya_bolgan_joy = models.ForeignKey(OperatsiyaBolganJoy, on_delete=models.CASCADE, null=True, blank=True)
     biriktirilgan_file = models.FileField(upload_to='media/biriktirilgan/%Y/%m/%d', null=True, blank=True)
     qoshimcha_malumotlar = models.TextField(null=True, blank=True)
+    arxivlangan = models.BooleanField(default=True)
+    arxiv_sababi = models.TextField(null=True, blank=True)
 
     class Meta:
         verbose_name = "Bemor"
