@@ -1,18 +1,19 @@
 import logging
 from datetime import date
 import openpyxl
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, serializers
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from django.db import transaction
+from rest_framework.decorators import action
 
 from shared.cumtom_pagination import CustomPagination
+from .filters import BemorFilter
 
 logger = logging.getLogger(__name__)
-from dori.models import TavsiyaEtilganDori
 from .models import BemorQoshish, Manzil, OperatsiyaBolganJoy, Bemor, ArxivBemor, Viloyat
 from rest_framework.permissions import AllowAny
-from django.db import IntegrityError
 from .permissions import BemorPermission
 from .serializers import BemorQoshishSerializer, ManzilSerializer, OperatsiyaBolganJoySerializer, \
     BemorSerializer, ViloyatSerializer, ArxivSerializer
@@ -112,9 +113,10 @@ class BemorViewSet(viewsets.ModelViewSet):
     queryset = Bemor.objects.all().order_by('-created_at')
     serializer_class = BemorSerializer
     permission_classes = [BemorPermission, ]
-    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['bemor__ism', 'bemor__familiya', 'bemor__JSHSHIR']
-    ordering_fields = ['created_at', 'arxivga_olingan_sana']
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = BemorFilter
+    search_fields = ['bemor__ism', 'bemor__familiya']
+    ordering_fields = ['bemor__ism', 'bemor__id']
     pagination_class = CustomPagination
 
     def create(self, request, *args, **kwargs):
@@ -149,48 +151,45 @@ class BemorViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": f"Server xatosi: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    def destroy(self, request, *args, **kwargs):
+    @action(detail=False, methods=['get'])
+    def arxivlanganlar(self, request):
+        # Faqat arxivlangan bemorlar
+        bemorlar = Bemor.objects.filter(arxivlangan=True).order_by('-created_at')
+        page = self.paginate_queryset(bemorlar)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(bemorlar, many=True)
+        return Response(serializer.data)
 
-        try:
-            bemor_id = kwargs.get('pk')
-            if not bemor_id:
-                return Response(
-                    {"error": "Bemor ID kiritilishi shart!"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+    @action(detail=False, methods=['get'])
+    def arxivlanmaganlar(self, request):
+        # Faqat arxivlanmagan bemorlar
+        bemorlar = Bemor.objects.filter(arxivlangan=False).order_by('-created_at')
+        page = self.paginate_queryset(bemorlar)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(bemorlar, many=True)
+        return Response(serializer.data)
 
-            with transaction.atomic():
-                bemor = Bemor.objects.get(id=bemor_id)
+    @action(detail=True, methods=['post'])
+    def arxivlash(self, request, pk=None):
+        # Bemorni arxivlash
+        bemor = self.get_object()
+        bemor.arxivlangan = False
+        bemor.arxiv_sababi = request.data.get('sabab', 'Sabab ko‘rsatilmagan')
+        bemor.save()
+        return Response({'status': 'Bemor muvaffaqiyatli arxivlandi!'})
 
-                # Arxivga bemor nusxasini qo‘shish
-                arxiv_bemor = ArxivBemor.objects.create(
-                    bemor=bemor,
-                    qoshimcha_malumotlar=bemor.qoshimcha_malumotlar,
-                )
-
-                # ⚠️ Muhim: Arxivga yozilgach, bemorni o‘chirish
-                bemor.delete()
-
-                arxiv_bemor_data = ArxivSerializer(arxiv_bemor).data
-
-                return Response(
-                    {
-                        "message": "Bemor arxivga o‘tkazildi va ro‘yxatdan o‘chirildi.",
-                        "arxiv_bemor": arxiv_bemor_data
-                    },
-                    status=status.HTTP_200_OK
-                )
-
-        except Bemor.DoesNotExist:
-            return Response(
-                {"error": "Bunday bemor mavjud emas!"},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except Exception as e:
-            return Response(
-                {"error": f"Xatolik yuz berdi: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+    @action(detail=True, methods=['post'])
+    def arxivdan_chiqarish(self, request, pk=None):
+        # Bemorni arxivdan chiqarish
+        bemor = self.get_object()
+        bemor.arxivlangan = True
+        bemor.arxiv_sababi = request.data.get('sabab', 'Sabab ko‘rsatilmagan')
+        bemor.save()
+        return Response({'status': 'Bemor arxivdan chiqarildi!'})
 
 
 class ExportBemorExcelView(View):

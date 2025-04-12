@@ -1,6 +1,7 @@
 from django.contrib import admin
 from import_export.admin import ExportMixin
-from .models import Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, BemorQoshish, Viloyat, Tuman, Manzil, ArxivBemor
+from .models import Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, BemorQoshish, Viloyat, Tuman, Manzil, \
+    ArxivBemor
 
 
 class BemorInline(admin.TabularInline):  # Bemorlarni boshqa adminlarda ichki jadval sifatida ko‘rsatish
@@ -24,13 +25,11 @@ class TumanAdmin(admin.ModelAdmin):
 
 @admin.register(Manzil)
 class ManzilAdmin(admin.ModelAdmin):
-    list_display = ('mamlakat', 'viloyat', 'tuman', 'tuman_tibbiyot_birlashmasi', 'mahalla', 'kocha_nomi')
+    list_display = ('mamlakat', 'viloyat', 'tuman', 'mahalla', 'kocha_nomi')
     search_fields = ('mahalla', 'kocha_nomi')
-    list_filter = ('viloyat', 'tuman', 'tuman_tibbiyot_birlashmasi')
+    list_filter = ('viloyat', 'tuman')
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """
-        """
         if db_field.name == "tuman":
             if "viloyat" in request.GET:
                 kwargs["queryset"] = Tuman.objects.filter(viloyat_id=request.GET["viloyat"])
@@ -81,7 +80,7 @@ class ArxivBemorAdmin(admin.ModelAdmin):
 
 @admin.register(Bemor)
 class BemorAdmin(ExportMixin, admin.ModelAdmin):
-    list_display = ('id', "bemor", "manzil", "bemor_holati", "operatsiya_bolgan_joy")
+    list_display = ('id', "bemor", "manzil", 'arxivlangan', "bemor_holati", 'arxiv_sababi', "operatsiya_bolgan_joy")
     search_fields = ("bemor__JSHSHIR", "bemor__ism", "bemor__familiya")
     list_filter = ("bemor__jinsi", "bemor_holati",)
     # date_hierarchy = "arxivga_olingan_sana"
@@ -102,4 +101,3 @@ class BemorAdmin(ExportMixin, admin.ModelAdmin):
         # }),
     )
     # readonly_fields = ("arxivga_olingan_sana",)
-
