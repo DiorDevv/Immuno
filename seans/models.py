@@ -23,11 +23,16 @@ class Korik(BaseModel):
     qon_analiz_qilingan_sana = DateField(auto_now=True)
     reagent_ishlatildi = BooleanField(db_default=False)
     shifokor = ForeignKey('shifokor.Shifokorlar', CASCADE, related_name='koriklar')
-    biriktirilgan_fayllar = FileField()
+    # biriktirilgan_fayllar = FileField()
     description = TextField()
 
     def __str__(self):
         return f"{self.id}"
+
+
+class KorikFile(Model):
+    file = FileField()
+    korik = ForeignKey('seans.Korik', CASCADE, related_name='files')
 
 
 class TavsiyaQilinganDorilar(BaseModel):
