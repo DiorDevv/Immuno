@@ -14,7 +14,7 @@ class AnalizNatijalariModelAdmin(admin.ModelAdmin):
 class KorikModelAdmin(admin.ModelAdmin):
     bemor = BemorAdmin
     list_display = ("bemor", "korik_otkazilgan_sana", "murojat_turi", "qon_olingan_sana", "qon_analiz_qilingan_sana",
-                    "reagent_ishlatildi", "shifokor", "biriktirilgan_fayllar", "description")
+                    "reagent_ishlatildi", "shifokor", "description")
 
 
 @admin.register(TavsiyaQilinganDorilar)

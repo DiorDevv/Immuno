@@ -1,6 +1,7 @@
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import ModelViewSet
 
+from users.permissions import UserPermission
 from .models import Korik
 from .serializers import KorikModelSerializer
 
@@ -14,7 +15,22 @@ from reportlab.pdfgen import canvas
 class KorikModelViewSet(ModelViewSet):
     queryset = Korik.objects.all()
     serializer_class = KorikModelSerializer
-    permission_classes = [AllowAny, ]
+
+    def create(self, request, *args, **kwargs):
+        self.permission_classes = (UserPermission, )
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        self.permission_classes = (UserPermission, )
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self.permission_classes = (UserPermission, )
+        return super().destroy(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self.permission_classes = (UserPermission, )
+        return super().partial_update(request, *args, **kwargs)
 
 
 class KorikPDFAPIView(APIView):

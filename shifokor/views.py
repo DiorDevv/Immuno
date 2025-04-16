@@ -4,6 +4,8 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.response import Response
+
+from users.permissions import UserPermission
 from shifokor.models import Shifokorlar, ShifokorQoshish
 from .serializers import ShifokorModelSerializer, ShifokorListSerializer, \
     ArxivShifokorModelSerializer, ShifokorCreateDetailModelserializer, ShifokorDetailModelSerializer, \
@@ -20,14 +22,18 @@ from rest_framework.views import APIView
 class ShifokorModelViewSet(ModelViewSet):
     queryset = Shifokorlar.objects.all()
     serializer_class = ShifokorModelSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (UserPermission,)
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        qs = qs.filter(active=False)
+        return qs
 
     def list(self, request, *args, **kwargs):
-        if request.user.role_user in ['TTB', 'BOSH_M']:
-            self.serializer_class = ShifokorListSerializer
-        else:
-            self.serializer_class = ShifokorListAPISerializer
+        # if request.user.role_user in ['TTB', 'BOSH_M']:
+        #     self.serializer_class = ShifokorListSerializer
+        # else:
+        self.serializer_class = ShifokorListAPISerializer
         self.filter_backends = [SearchFilter, OrderingFilter]
         self.search_fields = ['shifokor__ism', 'shifokor__familiya', 'shifokor__JSHSHIR']
         return super().list(request, *args, **kwargs)
@@ -51,10 +57,8 @@ class ShifokorModelViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         arxiv_sababi = kwargs.get('arxiv_sababi')
-        arxivga_olingan_sana = datetime.date.today()
-        obj = self.get_object()
-        obj.arxiv_sababi = arxiv_sababi
-        obj.arxivga_olingan_sana = arxivga_olingan_sana
+        obj = self.get_object()  # obj.arxiv_sababi = arxiv_sababi
+        obj.active = False
         obj.save()
         return super().retrieve(request, *args, **kwargs)
 
@@ -62,13 +66,14 @@ class ShifokorModelViewSet(ModelViewSet):
 class Shifokor_qoshish(CreateAPIView):
     queryset = ShifokorQoshish
     serializer_class = ShifokorQoshishModelSerializer
+    permission_classes = (UserPermission,)
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data = request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             shifokor = self.queryset.objects.get(jshshir=request.data.get('jshshir'))
             return Response(
-            {
+                {
                     "shifokor": {
                         "jshshir": shifokor.jshshir,
                         "ism": shifokor.ismi,
@@ -93,10 +98,13 @@ class ArxivShifokorlar(ListAPIView):
     queryset = Shifokorlar.objects.all()
     serializer_class = ArxivShifokorModelSerializer
 
+    # permission_classes = (ShifokorPermission,)
+
     def get_queryset(self):
         qs = super().get_queryset()
-        qs = qs.filter(arxivga_olingan_sana__isnull = False)
+        qs = qs.filter(active=False)
         return qs
+
 
 class ShifokorlarExcelDownloadAPIView(APIView):
     """Shifokorlar ro‘yxatini Excel formatida yuklab beradigan API"""
@@ -112,7 +120,8 @@ class ShifokorlarExcelDownloadAPIView(APIView):
                 "Ism": shifokor.shifokor.ismi,
                 "Familya": shifokor.shifokor.familya,
                 "Otasining ismi": shifokor.shifokor.otasining_ismi,
-                "Tug‘ilgan sana": shifokor.shifokor.tugilgan_sana.strftime('%Y-%m-%d') if shifokor.shifokor.tugilgan_sana else '',
+                "Tug‘ilgan sana": shifokor.shifokor.tugilgan_sana.strftime(
+                    '%Y-%m-%d') if shifokor.shifokor.tugilgan_sana else '',
                 "Lavozimi": shifokor.lavozimi,
                 "Mutaxassislik toifasi": shifokor.mutaxasislik_toifasi,
                 "Telefon raqami": shifokor.telefon_raqami

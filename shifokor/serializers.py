@@ -87,7 +87,7 @@ class ArxivShifokorModelSerializer(ModelSerializer):
     shifokor = ShaxsiyMalumotlarModelSerializer(read_only=True)
     class Meta:
         model = Shifokorlar
-        fields = ('shifokor', 'lavozimi', 'mutaxasislik_toifasi', 'telefon_raqami', 'arxivga_olingan_sana')
+        fields = ('shifokor', 'lavozimi', 'mutaxasislik_toifasi', 'telefon_raqami', 'created_at')
 
 
 
