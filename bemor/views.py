@@ -12,11 +12,11 @@ from shared.cumtom_pagination import CustomPagination
 from .filters import BemorFilter
 
 logger = logging.getLogger(__name__)
-from .models import BemorQoshish, Manzil, OperatsiyaBolganJoy, Bemor, ArxivBemor, Viloyat
+from .models import BemorQoshish, Manzil, OperatsiyaBolganJoy, Bemor, Viloyat
 from rest_framework.permissions import AllowAny
 from .permissions import BemorPermission
 from .serializers import BemorQoshishSerializer, ManzilSerializer, OperatsiyaBolganJoySerializer, \
-    BemorSerializer, ViloyatSerializer, ArxivSerializer
+    BemorSerializer, ViloyatSerializer
 from rest_framework import permissions
 from rest_framework import viewsets, filters
 from rest_framework.exceptions import ValidationError
@@ -154,7 +154,7 @@ class BemorViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def arxivlanganlar(self, request):
         # Faqat arxivlangan bemorlar
-        bemorlar = Bemor.objects.filter(arxivlangan=True).order_by('-created_at')
+        bemorlar = Bemor.objects.filter(arxivlangan=False).order_by('-created_at')
         page = self.paginate_queryset(bemorlar)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -165,7 +165,7 @@ class BemorViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def arxivlanmaganlar(self, request):
         # Faqat arxivlanmagan bemorlar
-        bemorlar = Bemor.objects.filter(arxivlangan=False).order_by('-created_at')
+        bemorlar = Bemor.objects.filter(arxivlangan=True).order_by('-created_at')
         page = self.paginate_queryset(bemorlar)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -250,14 +250,27 @@ class ExportBemorExcelView(View):
         return response
 
 
+from django.utils.dateparse import parse_date
+
+
 class BemorHolatiStatistika(APIView):
     permission_classes = []
     pagination_class = CustomPagination
 
     def get(self, request):
+        # URL'dan sana olish: ?sana=2023-01-01
+        sana = request.query_params.get('sana')
+
+        bemorlar = Bemor.objects.all()
+
+        if sana:
+            parsed_sana = parse_date(sana)
+            if parsed_sana:
+                bemorlar = bemorlar.filter(created_at__date=parsed_sana)
+
         # Holatlar bo‘yicha statistika
         statistikalar = (
-            Bemor.objects
+            bemorlar
             .annotate(
                 holati_nomi=Coalesce(F('bemor_holati__holati'), Value("Noma'lum"))
             )
@@ -267,12 +280,12 @@ class BemorHolatiStatistika(APIView):
         )
 
         # Jami bemorlar soni
-        jami_bemorlar_soni = Bemor.objects.count()
+        jami_bemorlar_soni = bemorlar.count()
 
         return Response({
             "success": True,
             "data": list(statistikalar),
-            "jami_bemorlar": jami_bemorlar_soni  # Umumiy bemorlar soni qo‘shildi
+            "jami_bemorlar": jami_bemorlar_soni
         })
 
 

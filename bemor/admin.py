@@ -1,7 +1,6 @@
 from django.contrib import admin
 from import_export.admin import ExportMixin
-from .models import Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, BemorQoshish, Viloyat, Tuman, Manzil, \
-    ArxivBemor
+from .models import Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, BemorQoshish, Viloyat, Tuman, Manzil
 
 
 class BemorInline(admin.TabularInline):  # Bemorlarni boshqa adminlarda ichki jadval sifatida ko‘rsatish
@@ -66,16 +65,6 @@ class BemorQoshsihAdmin(admin.ModelAdmin):
     date_hierarchy = "tugilgan_sana"
     ordering = ("tugilgan_sana",)
     list_per_page = 20
-
-
-@admin.register(ArxivBemor)
-class ArxivBemorAdmin(admin.ModelAdmin):
-    list_display = ("bemor", "qoshimcha_malumotlar")
-    list_filter = ("bemor",)
-    search_fields = ("bemor__ism", "bemor__familiya", "bemor__JSHSHIR")
-    ordering = ("-qoshimcha_malumotlar",)
-    readonly_fields = ("qoshimcha_malumotlar",)  # ❌ `updated_at` o‘chirildi
-    autocomplete_fields = ("bemor", "bemor")  # ✅ TO‘G‘RI
 
 
 @admin.register(Bemor)
