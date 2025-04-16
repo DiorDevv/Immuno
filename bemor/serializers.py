@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from .models import BemorQoshish, Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, Viloyat, Tuman, \
-    ArxivBemor
+from .models import BemorQoshish, Manzil, OperatsiyaBolganJoy, BemorningHolati, Bemor, Viloyat, Tuman
 import re
 from django.utils import timezone
 import os
@@ -95,7 +94,6 @@ class BemorningHolatiSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class BemorSerializer(serializers.ModelSerializer):
     # ID larni faqat yozish uchun ishlatamiz (write_only=True)
     bemor = serializers.PrimaryKeyRelatedField(queryset=BemorQoshish.objects.all(), write_only=True)
@@ -140,7 +138,6 @@ class BemorSerializer(serializers.ModelSerializer):
             }
         return data
 
-
     def validate_biriktirilgan_file(self, value):
         if value:
             ext = os.path.splitext(value.name)[1].lower()
@@ -162,11 +159,3 @@ class BemorSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
-
-
-class ArxivSerializer(serializers.ModelSerializer):
-    bemor = BemorSerializer()  # Bemor ma'lumotlarini ham ko‘rsatish
-
-    class Meta:
-        model = ArxivBemor
-        fields = "__all__"

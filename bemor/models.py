@@ -121,9 +121,3 @@ class Bemor(BaseModel):
         return f"{self.bemor.ism} {self.bemor.familiya} - {self.bemor.JSHSHIR}"
 
 
-class ArxivBemor(models.Model):
-    bemor = models.OneToOneField(Bemor, on_delete=models.CASCADE)
-    qoshimcha_malumotlar = models.TextField(null=True, blank=True)
-
-    class Meta:
-        verbose_name = "Bemor Arxivi"

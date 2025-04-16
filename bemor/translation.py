@@ -1,7 +1,7 @@
 from modeltranslation.translator import register, TranslationOptions
 from .models import (
     Viloyat, Tuman, Manzil, OperatsiyaBolganJoy, BemorningHolati,
-    BemorQoshish, Bemor, ArxivBemor
+    BemorQoshish, Bemor
 )
 
 @register(Viloyat)
@@ -32,6 +32,4 @@ class BemorQoshishTranslationOptions(TranslationOptions):
 class BemorTranslationOptions(TranslationOptions):
     fields = ('qoshimcha_malumotlar',)
 
-@register(ArxivBemor)
-class ArxivBemorTranslationOptions(TranslationOptions):
-    fields = ('qoshimcha_malumotlar',)
+
